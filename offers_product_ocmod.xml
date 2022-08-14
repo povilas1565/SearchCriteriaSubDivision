@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+    <name>Предложения товара</name>
+    <code>offers_product</code>
+    <version>1.0</version>
+    <author>VarIzo</author>
+    <link>povilas1565.ru</link>
+    <file path="catalog/model/catalog/product.php">
+        <operation>
+            <search><![CDATA[$sql .= " AND p.manufacturer_id = '" . (int)$data['filter_manufacturer_id'] . "'";]]></search>
+            <add position="before" offset="2"><![CDATA[
+                if($this->config->get('offers_product_status') && $this->config->get('offers_product_view_only_master') && (__FUNCTION__ ==='getProducts' || __FUNCTION__ ==='getTotalProducts')){
+                    $sql .= " AND p.master_product = 1";
+                }
+                /*!End!*/
+                ]]>
+            </add>
+        </operation>
+    </file>
+    <file path="catalog/view/theme/default/template/product/product.tpl">
+        <operation>
+            <search><![CDATA[<div id="product">]]></search>
+            <add position="after" offset=""><![CDATA[
+                <!-- offers product -->
+                <?php if (isset($offers_product)) { ?>
+                <div class="form-group">
+                  <label class="control-label" for="select-offers-product"><?php echo $label_select_offers_product; ?></label>
+                    <?php foreach ($offers_product as $offer_product) { ?>
+                  <div><a href="<?php echo $offer_product['href']; ?>"><?php echo $offer_product['short_name']; ?> - <?php echo $offer_product['price']; ?></a></div>
+                    <?php } ?>
+                </div>
+                <?php } ?>
+                <!-- -->
+                ]]>
+            </add>
+        </operation>
+    </file>
+    <file path="admin/language/catalog/product.php">
+        <operation>
+            <search><![CDATA[<?php]]></search>
+            <add position="after" offset="1"><![CDATA[
+                $_['entry_master_product']  = 'Основной товар:';
+                /*!End!*/
+                ]]>
+            </add>
+        </operation>
+    </file>
+    <file path="admin/model/catalog/product.php">
+        <operation>
+            <search><![CDATA[$sql .= " AND p.status = '" . (int)$data['filter_status'] . "'";]]></search>
+            <add position="after" offset="2"><![CDATA[
+                if (isset($data['filter_master_product']) && !is_null($data['filter_master_product'])) {
+                    $sql .= " AND p.master_product = '" . (int)$data['filter_master_product'] . "'";
+                }
+                /*!End!*/
+                ]]></add>
+        </operation>
+    </file>
+    <file path="admin/view/template/catalog/product_list.tpl">
+        <operation>
+            <search><![CDATA[<button type="button" id="button-filter"]]></search>
+            <add position="before" offset="1"><![CDATA[
+            <!-- offers product-->
+            <?php if($offers_product_status) {?>
+              <div class="form-group">
+                <label class="control-label" for="input-master-product-filter"><?php echo $entry_master_product_filter; ?></label>
+                <select name="filter_master_product" id="input-master-product-filter" class="form-control">
+                  <option value="*"></option>
+                  <?php if ($filter_master_product) { ?>
+                  <option value="1" selected="selected"><?php echo $text_enabled; ?></option>
+                  <?php } else { ?>
+                  <option value="1"><?php echo $text_enabled; ?></option>
+                  <?php } ?>
+                  <?php if (!$filter_master_product && !is_null($filter_master_product)) { ?>
+                  <option value="0" selected="selected"><?php echo $text_disabled; ?></option>
+                  <?php } else { ?>
+                  <option value="0"><?php echo $text_disabled; ?></option>
+                  <?php } ?>
+                </select>
+              </div>
+              <?php } ?>
+                ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[url += '&filter_status=' + encodeURIComponent(filter_status);]]></search>
+            <add position="after" offset="2"><![CDATA[
+            	//offers product
+                var filter_master_product = $('select[name=\'filter_master_product\']').val();
+                if (filter_master_product != '*') {
+                    url += '&filter_master_product=' + encodeURIComponent(filter_master_product);
+                }
+                ]]></add>
+        </operation>
+    </file>
+    <file path="admin/controller/catalog/product.php">
+        <operation>
+            <search><![CDATA[$filter_image = $this->request->get['filter_image'];]]></search>
+            <add position="before" offset="2"><![CDATA[
+                /*Auth: VarIzo Task: {offers product} Date:03.04.2017 !Start!*/
+                /*Comment: */
+                $data['offers_product_status'] = $this->config->get('offers_product_status');
+                if (isset($this->request->get['filter_master_product'])) {
+                    $filter_master_product = $this->request->get['filter_master_product'];
+                } else {
+                    $filter_master_product = null;
+                }
+                /*!End!*/
+                ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$url .= '&filter_image=' . $this->request->get['filter_image'];]]></search>
+            <add position="before" offset="2"><![CDATA[
+                /*Auth: VarIzo Task: {offers product} Date:03.04.2017 !Start!*/
+                /*Comment: */
+                if (isset($this->request->get['filter_master_product'])) {
+                    $url .= '&filter_master_product=' . $this->request->get['filter_master_product'];
+                }
+                /*!End!*/
+                ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[$data['filter_image'] = $filter_image;]]></search>
+            <add position="after" offset="1"><![CDATA[
+                $data['filter_master_product'] = $filter_master_product;
+                ]]></add>
+        </operation>
+        <operation>
+            <search><![CDATA[=> $filter_image,]]></search>
+            <add position="after" offset="1"><![CDATA[
+                'filter_master_product' => $filter_master_product,
+                ]]></add>
+        </operation>
+    </file>
+
+</modification>
